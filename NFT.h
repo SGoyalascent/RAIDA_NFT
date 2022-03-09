@@ -1,5 +1,5 @@
-#ifndef UDP_SOCKET_H
-#define UDP_SOCKET_H
+#ifndef NFT_H
+#define NFT_H
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -210,76 +210,15 @@
 #define  FIFO_RESPONSE 						1
 //--------------------------------------------------------------------------
 #define FIX_VERSION_1							1			
-#define FIX_VERSION_2							2			
-extern int sockfd;
-extern unsigned char response_flg;
-extern int32_t key_cnt;
-extern fd_set select_fds;                
-extern fd_set select_dns_fds[RAIDA_SERVER_MAX],select_legacy_fds[RAIDA_SERVER_MAX];                
-extern struct timeval timeout,dns_timeout[RAIDA_SERVER_MAX],legacy_timeout[RAIDA_SERVER_MAX];     
-extern struct sockaddr_in servaddr, cliaddr;
-extern long time_stamp_before,time_stamp_after;
-extern unsigned char udp_buffer[UDP_BUFF_SIZE], response[RESPONSE_HEADER_MAX],EN_CODES[EN_CODES_MAX];
-extern unsigned char free_thread_running_flg;
-extern pthread_t free_id_ptid;
-union coversion{
-	uint32_t val32;
-	unsigned char data[4];
-};
-struct key_table{
-	uint32_t key_id;
-	unsigned char key[KEY_BYTES_CNT];
-	uint32_t time_stamp;
-};
+#define FIX_VERSION_2							2		
+//-------------------------------------------------------------
 
-struct cmd_table {
-	unsigned int request_body_without_coins,bytes_per_coin;
-	void (*cmd_func_ptr)(unsigned int);	
-};
-extern union coversion snObj;
-extern struct key_table key_table_obj[ENCRY2_KEYS_MAX];
-extern uint8_t nounce[NOUNCE_BYTES_CNT];
-extern uint8_t encrypt_key[AN_BYTES_CNT];
-extern unsigned char encrytion_type;
-//------------------------------------------------------------------------
-int listen_request(); 
-void* listen_request_raida(void *arg);
-void init_en_codes();
-int init_udp_socket();
-void execute_news();
-void execute_version();
-void* free_id_timer_thread(void *);
-void execute_fix(unsigned int,unsigned int,unsigned char);
-void execute_echo(unsigned int);
-void execute_become_primary(unsigned int);
-void execute_become_mirror(unsigned int );
-void execute_check_updates(unsigned int );
-void execute_get_key(unsigned int);
-void process_request(unsigned int);
-void execute_find(unsigned int,unsigned int);
-void execute_logs(unsigned int);
-void execute_free_id(unsigned int,unsigned char);
-void execute_detect(unsigned int,unsigned int);
-void execute_identify(unsigned int,unsigned int);
-void execute_validate(unsigned int,unsigned int);
-void execute_put_key(unsigned int);
-void execute_get_ticket(unsigned int,unsigned int);
-char add_key(char *,uint32_t );
-void send_err_resp_header(int );
-void set_time_out(unsigned char);
-void set_dns_time_out(int,int);
-void execute_pown(unsigned int,unsigned int);
-void execute_pang(unsigned int,unsigned int);
-void send_response(unsigned char ,unsigned int );
-unsigned char validate_request_header(unsigned char *,int );
-unsigned char validate_request_body_general(unsigned int,unsigned int ,int *);
-unsigned char validate_request_body(unsigned int ,unsigned char,unsigned int ,int *);
-unsigned char add_encry2_key(uint32_t ,unsigned char []);
-int find_encry2_key(uint32_t);
-int init_dns_socket(unsigned int,unsigned int, char[64]);
-int init_legacy_socket(unsigned int, unsigned int, unsigned char *);
-void send_to_dns(unsigned int,unsigned int);
-int listen_dns_socket(unsigned int);
-void send_to_legacy(unsigned int,unsigned int);
-int listen_legacy_socket(unsigned int);
-#endif
+#define NFT_TEST_CREATE                 200
+#define NFT_CREATE                      202
+#define NFT_READ_META                   203
+#define NFT_READ_DATA                   204
+#define NFT_UPDATE                      206
+#define NFT_DELETE                      208
+#define NFT_REQUEST_HASH                210
+#define NFT_REQUEST_SYNC
+#define NFT_REQUEST_MIRROR
