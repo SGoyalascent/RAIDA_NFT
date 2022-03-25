@@ -1,0 +1,1 @@
+gcc raida_server.c udp_socket.c sky_wallet.c NFT.c aes.c -o NFT

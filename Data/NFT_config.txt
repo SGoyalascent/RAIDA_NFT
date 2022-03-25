@@ -1,0 +1,2 @@
+NFT_Data_Path: /opt/RAIDA_NFT/DATA/NFT_DATA
+NFT_Meta_Path: /opt/RAIDA_NFT/DATA/NFT_META

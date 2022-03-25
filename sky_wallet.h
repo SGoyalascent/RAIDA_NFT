@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "library.h"
 #include "aes.h"
+#include "NFT.h"
 //-----------------------------------------------------------------
 #define COIN_OWNER_MAX					5000
 #define COIN_OWNER_DETAILS_MAX			5000

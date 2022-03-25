@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 
 #include "raida_server.h"
@@ -176,6 +177,7 @@
 #define SUCCESS								250
 #define FAIL								251
 #define NO_ERR_CODE	 		   				255
+
 //----------Command codes-----------------------------------------
 #define CMD_POWN 							0
 #define CMD_DETECT	 						1
@@ -212,13 +214,63 @@
 #define FIX_VERSION_1							1			
 #define FIX_VERSION_2							2		
 //-------------------------------------------------------------
+#define NFTS_CNT_MAX									16777216 	// NO_OF_PAGES * RECORDS_PER_PAGE
+#define NFT_DATA_PLUS_META_PER_COIN_MAX_BYTES_SIZE		8192000		//in bytes(binary) (8MB)
+#define TCP_BUFFER_MAX_SIZE								204800000   //in bytes(binary) (200MB) 
+#define TCP_BUFF_PER_FRAME_SIZE							65535 		//in bytes(binary) (64 KB)
+#define TCP_FRAMES_MAX									102400		//per frame 2KB	
+#define TCP_PACKET_SIZE									2048		//in bytes(2KB)								
+#define NO_OF_PAGES_MAX									16384
+#define RECORDS_PER_PAGE_MAX							1024
+#define REQ_BODY_SEPERATOR_BYTES_CNT					3
 
 #define NFT_TEST_CREATE                 200
 #define NFT_CREATE                      202
 #define NFT_READ_META                   203
 #define NFT_READ_DATA                   204
 #define NFT_UPDATE                      206
-#define NFT_DELETE                      208
-#define NFT_REQUEST_HASH                210
-#define NFT_REQUEST_SYNC
-#define NFT_REQUEST_MIRROR
+#define NFT_ADD 	                    208
+
+//----------------------------NFT Error Codes--------------------------
+#define NFT_CREATE_SUCCESS 											50
+#define NFT_CREATE_WARNING_NFT_ALREADY_EXISTS_FOR_COINS				51
+#define NFT_CREATE_WARNING_NO_DATA_OR_META_FOUND					52
+#define NFT_CREATE_EXCESS_DATA_FOR_COINS							53
+#define NFT_CREATE_GUID_NOT_UNIQUE									54
+#define NFT_CREATE_COUNTERFIET_COINS								55
+#define NFT_UPDATE_GUID_NOT_FOUND									56	
+#define NFT_ADD_GUID_NOT_FOUND										57
+#define NFT_ADD_COUNTERFIET_COINS									58
+//----------------------------------------------------------------------------------------
+
+
+struct NFT_TABLE {
+	unsigned int SN;
+	unsigned char AN[AN_BYTES_CNT];
+	unsigned char MFS;
+	unsigned char GUID[GUID_BYTES_CNT];
+};
+
+extern struct NFT_TABLE nft_details[NFTS_CNT_MAX];
+
+
+int Read_NFT_Configuration_File();
+void tcp_set_time_out(unsigned char secs);
+int init_tcp_socket();
+int tcp_listen_request();
+void tcp_process_request(unsigned int packet_len);
+void tcp_send_err_resp_header(unsigned char status_code);
+void tcp_prepare_resp_header(unsigned char status_code);
+void tcp_send_response(unsigned char status_code,unsigned int size);
+unsigned char tcp_validate_request_header(unsigned char * buff,int packet_size);
+unsigned int validate_request_body_only_coins(unsigned int packet_len,unsigned char bytes_per_coin,unsigned int req_body_without_coins,int *req_header_min);
+unsigned char validate_request_body_nfts(unsigned int packet_len,unsigned int index);
+unsigned char isGuidUnique(unsigned char *guid);
+unsigned char authenticate_coins(unsigned int no_of_coins, unsigned int index, unsigned int coin_id);
+void execute_test_create(unsigned int packet_len, int coin_id);
+void execute_create(unsigned int packet_len, unsigned int coin_id);
+void execute_update(unsigned int packet_len, unsigned int coin_id);
+void execute_read_data(unsigned int packet_len, unsigned int coin_id);
+void execute_read_meta(unsigned int packet_len, unsigned int coin_id);
+void execute_add_coins(unsigned int packet_len, unsigned int coin_id);
+#endif

@@ -242,7 +242,7 @@ int load_coin_config(){
     printf("Coin Id  -: %d ", coin_config_obj[i].coin_id);
     printf("\t AN's per page  -: %d", coin_config_obj[i].page_size);
     printf("\t No of Pages    -: %d\n", coin_config_obj[i].no_of_pages);
-    index+=COIN_CONFIG_BYTES;
+    index += COIN_CONFIG_BYTES;
   }
   //coin_id_obj = (struct coin_id *) malloc(sizeof(struct coin_id)*(coin_id_max+1));
   fclose(fp_inp);
@@ -417,7 +417,6 @@ int load_encrypt_key(){
 //---------------------------------------------------------
 int configure_an(unsigned int index, int alloc_only){
 
-
   FILE *fp_inp = NULL;
   unsigned int i = 0,j=0,an_cnt,no_of_bytes,size;
   unsigned char buff[AN_BYTES_CNT+MS_BYTES_CNT];
@@ -427,6 +426,7 @@ int configure_an(unsigned int index, int alloc_only){
   coin_config_obj[index].pages_changed = (unsigned char *) malloc(sizeof(unsigned char) * coin_config_obj[index].no_of_pages);
   memset(coin_config_obj[index].pages_changed,sizeof(unsigned char) * coin_config_obj[index].no_of_pages,0);
   // We don't need to generate anything 
+  
   if (alloc_only) {
     return 0;
   }
@@ -452,13 +452,13 @@ int configure_an(unsigned int index, int alloc_only){
     }
     fseek(fp_inp, 0L, SEEK_END);
     an_cnt = ftell(fp_inp)/(AN_BYTES_CNT+MFS_BYTES_CNT);
-    //printf("AN's = %d",an_cnt);
-    //printf("coin = %d",coin_config_obj[index].page_size);
+    printf("AN's = %d",an_cnt);
+    printf("coin = %d",coin_config_obj[index].page_size);
     if(an_cnt<coin_config_obj[index].page_size){
-      unsigned char upper=255,lower=1, num[1];
-      no_of_bytes=an_cnt*(AN_BYTES_CNT+MFS_BYTES_CNT);
+      unsigned char upper = 255, lower = 1, num[1];
+      no_of_bytes = an_cnt*(AN_BYTES_CNT+MFS_BYTES_CNT);
       fseek(fp_inp,no_of_bytes,SEEK_SET);	
-      for(j=0;j<(coin_config_obj[index].page_size*(AN_BYTES_CNT+MFS_BYTES_CNT))-no_of_bytes;j++){
+      for(j = 0;j < (coin_config_obj[index].page_size*(AN_BYTES_CNT+MFS_BYTES_CNT))-no_of_bytes; j++){
         //srand(j);
         num[0] = 0;// (rand() % (upper - lower + 1)) + lower;
         fwrite(num,1,1,fp_inp);
@@ -482,13 +482,14 @@ int load_an(unsigned int index,unsigned int coin_id){
   printf("------------------------------\n");
   an_cnt=coin_config_obj[index].no_of_pages * coin_config_obj[index].page_size;
   coin_id_obj[coin_id].AN_CNT =  an_cnt;
-  coin_id_obj[coin_id].AN = (unsigned char **) malloc(an_cnt  * sizeof(unsigned char *));
-  coin_id_obj[coin_id].MFS = (unsigned char *) malloc(an_cnt  * MFS_BYTES_CNT);
-  coin_id_obj[coin_id].free_id_days = (unsigned char *) malloc(an_cnt  * FREE_ID_BYTES_CNT);
-  coin_id_obj[coin_id].TICKETS =(struct master_ticket **) malloc(an_cnt *sizeof(struct master_ticket *));
+  coin_id_obj[coin_id].AN = (unsigned char **) malloc(an_cnt*sizeof(unsigned char *));
+  coin_id_obj[coin_id].MFS = (unsigned char *) malloc(an_cnt*MFS_BYTES_CNT);
+  coin_id_obj[coin_id].free_id_days = (unsigned char *) malloc(an_cnt * FREE_ID_BYTES_CNT);
+  coin_id_obj[coin_id].TICKETS =(struct master_ticket **) malloc(an_cnt * sizeof(struct master_ticket *));
   sprintf((char*)str_coin_id,"%d",coin_id);
+  
   for(i=0;i<coin_config_obj[index].no_of_pages;i++){
-    printf("\n Loading AN's for coin  %d Please wait... \n",coin_id);
+    printf("\n Loading AN's for coin %d Please wait... \n",coin_id);
     strcpy(path,execpath);
     strcat(path,"/Data/coin_");
     strcat(path,str_coin_id);
@@ -508,6 +509,7 @@ int load_an(unsigned int index,unsigned int coin_id){
       fread(buff, AN_BYTES_CNT+MFS_BYTES_CNT, 1, fp_inp) ;
       coin_id_obj[coin_id].AN[an_index]= (unsigned char *) malloc(AN_BYTES_CNT);
       memcpy(coin_id_obj[coin_id].AN[an_index],buff,AN_BYTES_CNT);
+      memcpy(nft_details[an_index].AN,buff,AN_BYTES_CNT);
       coin_id_obj[coin_id].MFS[an_index]=buff[AN_BYTES_CNT];
       /*printf("AN  :- %d \t [",an_index );
         for(k=0;k<AN_BYTES_CNT;k++){		
@@ -526,6 +528,128 @@ int load_an(unsigned int index,unsigned int coin_id){
   printf("\n %d AN's loaded successfully \n",an_index);
   return 0;
 }
+
+//----------------------------------------------------------
+//configure GUIDs 
+//---------------------------------------------------------
+int configure_guid(unsigned int index, int alloc_only){
+
+  FILE *fp_inp = NULL;
+  unsigned int i = 0,j=0,an_cnt,no_of_bytes,size;
+  unsigned char buff[AN_BYTES_CNT+MS_BYTES_CNT];
+  char str_page_no[16],str_coin_id[16];
+  char path[256], mkdir_path[256];
+  sprintf((char*)str_coin_id,"%d",coin_config_obj[index].coin_id);
+  coin_config_obj[index].pages_changed = (unsigned char *) malloc(sizeof(unsigned char) * coin_config_obj[index].no_of_pages);
+  memset(coin_config_obj[index].pages_changed,sizeof(unsigned char) * coin_config_obj[index].no_of_pages,0);
+  // We don't need to generate anything 
+  
+  if (alloc_only) {
+    return 0;
+  }
+  for(i=0;i<coin_config_obj[index].no_of_pages;i++){
+    printf("\n Creating GUID's for coin %d Please wait... \n",coin_config_obj[index].coin_id);
+    strcpy(path,execpath);
+    strcat(path,"/Data/coin_");
+    strcat(path,str_coin_id);
+    strcpy(mkdir_path,"mkdir -m 777 >>/dev/null 2>>/dev/null ");
+    strcat(mkdir_path,path);
+    system(mkdir_path);
+    strcat(path,"/GUIDs");
+    strcpy(mkdir_path,"mkdir -m 777 >>/dev/null 2>>/dev/null ");
+    strcat(mkdir_path,path);
+    system(mkdir_path);
+    strcat(path,"/");
+    sprintf((char*)str_page_no,"%d",i);		
+    strcat(path,str_page_no);
+    strcat(path,".bin");
+    puts(path);
+    if ((fp_inp = fopen(path, "ab+")) == NULL) {
+      fp_inp = fopen(path, "wb+");
+    }
+    fseek(fp_inp, 0L, SEEK_END);
+    an_cnt = ftell(fp_inp)/(GUID_BYTES_CNT+MFS_BYTES_CNT);
+    printf("guid's = %d",an_cnt);
+    printf("coin = %d",coin_config_obj[index].page_size);
+    if(an_cnt < coin_config_obj[index].page_size){
+      unsigned char upper = 255, lower = 1, num[1];
+      no_of_bytes = an_cnt*(GUID_BYTES_CNT+MFS_BYTES_CNT);
+      fseek(fp_inp,no_of_bytes,SEEK_SET);	
+      for(j = 0;j < (coin_config_obj[index].page_size*(AN_BYTES_CNT+MFS_BYTES_CNT))-no_of_bytes; j++){
+        //srand(j);
+        num[0] = 0;// (rand() % (upper - lower + 1)) + lower;
+        fwrite(num,1,1,fp_inp);
+      }
+      printf(".");
+    }
+    fclose(fp_inp);
+  }
+  return 0;
+}
+//----------------------------------------------------------
+//Loads GUIDs from GUIDs folder
+//---------------------------------------------------------
+int load_guid(unsigned int index,unsigned int coin_id){
+  FILE *fp_inp = NULL;
+  unsigned int i=0,j=0,k=0,an_index=0, an_cnt;
+  unsigned char buff[GUID_BYTES_CNT+MS_BYTES_CNT];
+  char str_page_no[16],str_coin_id[16],path[256];
+  printf("\n------------------------------\n");
+  printf("%d GUID  Details.. \n", coin_id);
+  printf("------------------------------\n");
+  an_cnt=coin_config_obj[index].no_of_pages * coin_config_obj[index].page_size;
+  //coin_id_obj[coin_id].AN_CNT =  an_cnt;
+  //coin_id_obj[coin_id].AN = (unsigned char **) malloc(an_cnt*sizeof(unsigned char *));
+  //coin_id_obj[coin_id].MFS = (unsigned char *) malloc(an_cnt*MFS_BYTES_CNT);
+  //coin_id_obj[coin_id].free_id_days = (unsigned char *) malloc(an_cnt * FREE_ID_BYTES_CNT);
+  //coin_id_obj[coin_id].TICKETS =(struct master_ticket **) malloc(an_cnt * sizeof(struct master_ticket *));
+
+  coin_id_obj[coin_id].GUID = (unsigned char **) malloc(an_cnt*sizeof(unsigned char *));
+  sprintf((char*)str_coin_id,"%d",coin_id);
+  
+  for(i=0;i<coin_config_obj[index].no_of_pages;i++){
+    printf("\n Loading AN's for coin %d Please wait... \n",coin_id);
+    strcpy(path,execpath);
+    strcat(path,"/Data/coin_");
+    strcat(path,str_coin_id);
+    strcat(path,"/GUIDs/");
+    //strcat(path,str_coin_id);
+    //strcat(path,"_");
+    sprintf((char*)str_page_no,"%d",i);		
+    strcat(path,str_page_no);
+    strcat(path,".bin");
+    //puts(path);
+    if ((fp_inp = fopen(path, "rb")) == NULL) {
+      printf("%s",path);
+      printf("Cannot be opened , exiting \n");
+      return 1;
+    }
+    for(j=0;j<coin_config_obj[index].page_size;j++){
+      fread(buff, AN_BYTES_CNT+MFS_BYTES_CNT, 1, fp_inp) ;
+      nft_details[an_index].SN = an_index;
+      coin_id_obj[coin_id].GUID[an_index] = (unsigned char *) malloc(GUID_BYTES_CNT);
+      memcpy(coin_id_obj[coin_id].GUID[an_index],buff,GUID_BYTES_CNT);
+      memcpy(nft_details[an_index].GUID,buff,GUID_BYTES_CNT);
+      nft_details[an_index].MFS = buff[GUID_BYTES_CNT];
+
+      /*printf("GUID  :- %d \t [",an_index );
+        for(k=0;k<GUID_BYTES_CNT;k++){		
+        printf("%3d, ", coin_id_obj[coin_id].GUID[an_index][k]);
+        }
+        printf("]");
+        printf("\t MFS : -[%d]\n",coin_id_obj[index].MFS[an_index]);
+        printf("%d,",an_index);*/
+      //coin_id_obj[coin_id].TICKETS[an_index]=NULL;
+      //coin_id_obj[coin_id].free_id_days[an_index] = 0;		
+      an_index++;
+    }
+    printf(".");
+    fclose(fp_inp);
+  }
+  printf("\n %d AN's loaded successfully \n",an_index);
+  return 0;
+}
+
 //---------------------------------------------------------
 // Adds ticket at the serial_no index
 //--------------------------------------------------------
@@ -617,7 +741,7 @@ char compare_date(struct date d1,struct date d2){
 
 }
 //-------------------------------------------------------------
-// update pages
+// update AN pages
 //-------------------------------------------------------------
 void update_an_pages(unsigned int coin_id){
   FILE *fp_inp = NULL;
@@ -664,6 +788,56 @@ void update_an_pages(unsigned int coin_id){
     }
   }		
 }
+
+//-------------------------------------------------------------
+// update GUID pages
+//-------------------------------------------------------------
+void update_guid_pages(unsigned int coin_id){
+  FILE *fp_inp = NULL;
+  unsigned int i=0,j=0,start_index=0,end_index=0;
+  char str_page_no[16],str_coin_id[16],tmp[256];
+  char path[256];
+  sprintf((char*)str_coin_id,"%d",coin_id);
+  for(i=0;i<coin_config_obj[coin_id].no_of_pages;i++){
+    if(coin_config_obj[coin_id].pages_changed[i]==1){
+      printf("%d page updated",i+1);
+      /*strcpy(path,execpath);
+        strcat(path,"/Data/coin_");
+        strcat(path,str_coin_id);
+        strcat(path,"/coin_");
+        strcat(path,str_coin_id);
+        strcat(path,"_");
+        sprintf((char*)str_page_no,"%d",i);		
+        strcat(path,str_page_no);
+        strcpy(tmp,path);
+        strcat(path,"_an.bin");
+        strcat(tmp,"_an_tmp.bin");*/
+
+      strcpy(path,execpath);
+      strcat(path,"/Data/coin_");
+      strcat(path,str_coin_id);
+      strcat(path,"/GUIDs/");
+      sprintf((char*)str_page_no,"%d",i);		
+      strcat(path,str_page_no);
+      strcat(path,".bin");
+      strcpy(tmp,path);
+      remove(path);
+      fp_inp = fopen(tmp, "wb+");
+      start_index = i * coin_config_obj[coin_id].page_size;
+      end_index = start_index + coin_config_obj[coin_id].page_size;
+      //printf("%d - %d", start_index, end_index);
+      fseek(fp_inp,0,SEEK_SET);	
+      for(j=start_index;j<end_index;j++){
+        fwrite(nft_details[j].GUID,GUID_BYTES_CNT,1,fp_inp);
+        fwrite(nft_details[j].MFS,MFS_BYTES_CNT,1,fp_inp);
+      }
+      coin_config_obj[coin_id].pages_changed[i]=0;
+      fclose(fp_inp);
+      rename(tmp,path);
+    }
+  }		
+}
+
 //-------------------------------------------------------------
 // load coin owner and coin details
 //-------------------------------------------------------------
@@ -690,7 +864,7 @@ int load_coin_owner(){
         strcat(tmp_path,dir->d_name);
         fp_inp = fopen(tmp_path, "rb");
         if(fp_inp!=NULL) {
-          while(fread(buff, 1,SN_BYTES_CNT+COIN_TYPE_BYTES_CNT, fp_inp)>0){
+          while(fread(buff, 1,SN_BYTES_CNT+COIN_TYPE_BYTES_CNT, fp_inp) > 0){
             memset(snObj.data,0,4);
             for(j=0;j<SN_BYTES_CNT;j++)
               snObj.data[j]=buff[(SN_BYTES_CNT-1-j)];
@@ -699,7 +873,6 @@ int load_coin_owner(){
           }
           fclose(fp_inp);
         }
-
       }      				
     }
     closedir(d);	
@@ -832,9 +1005,7 @@ void* update_coin_owner_details(void *arg){
       }
       fclose(fp_inp);		
     }
-
   }		
-
 }
 
 //-------------------------------------------------------------
@@ -848,9 +1019,31 @@ void* backup_an_thread(void *arg){
     if((time2 - time1) > server_config_obj.backup_frequency){
       time1 = time2;
       //printf("An Back up time \n");
+      /*
       for(i=0;i<coin_id_cnt;i++){
         update_an_pages(i);
-      }
+      } */
+      update_an_pages(2);    //coin_id for NFT = 2
+    }
+  }
+}
+
+//-------------------------------------------------------------
+// backup guid's
+//-------------------------------------------------------------
+void* backup_guid_thread(void *arg){
+  uint32_t time1,time2,i=0;
+  time1=time(NULL);
+  while(1){
+    time2 = time(NULL);
+    if((time2 - time1) > server_config_obj.backup_frequency){
+      time1 = time2;
+      //printf("An Back up time \n");
+      /*
+      for(i=0;i<coin_id_cnt;i++){
+        update_an_pages(i);
+      } */
+      update_guid_pages(2);    //coin_id for NFT = 2
     }
   }
 }
@@ -921,6 +1114,10 @@ void* del_encryp2_keys_thread(void *arg){
     }
   }
 }
+//-------------------------------------------------------------
+//
+//-------------------------------------------------------------
+
 int rename_an_files(unsigned int index,unsigned int coin_id){
   FILE *fp_inp = NULL;
   unsigned int i=0,j=0,k=0,an_index=0, an_cnt;
@@ -986,42 +1183,44 @@ int rename_an_files(unsigned int index,unsigned int coin_id){
     strcat(tmp,".bin");
     rename(tmp,path);	*/
 
-
   printf("\n");
   return 0;
 }
-//----------------------------------------------------------
-// main function
-//---------------------------------------------------------
-int main(int argc, char *argv[]) {
-  uint32_t packet_size,i=0;	
+//------------------------------------------------------------
+//MAIN PROGRAM TO RUN RAIDA SERVER
+//------------------------------------------------------------
+
+void* main_raida_server(void *arg) {
+
+  uint32_t packet_size;	
   int alloc_only = 1;
   welcomeMsg();
   getexepath();
   create_dirs();
   if(load_raida_no() || load_server_config()  || load_coin_config() || load_shards_config()  || load_dns_config() || load_raida_legacy_config() ||
-      load_encrypt_key() || load_coin_owner() || load_my_id_coins()){
+      load_encrypt_key() || load_coin_owner() || load_my_id_coins()) {
     exit(0);
   }
 
-
-
+/*
   if (argc > 1) {
     alloc_only = atoi(argv[1]);
     printf("Alloc only %d", alloc_only);
   }
+ */
 
-  for(i=0;i<coin_id_cnt;i++){
-    if(configure_an(i, alloc_only)){
-      exit(0);
-    }
+  int index = 0;
+
+  if(configure_an(index, alloc_only)){
+    exit(0);
   }
-  for(i=0;i<coin_id_cnt;i++){
-    if(load_an(i,coin_config_obj[i].coin_id)){
-      exit(0);
-    }
+
+  
+  if(load_an(index,coin_config_obj[index].coin_id)){
+    exit(0);
   }
-  srand(time(NULL));
+
+  //srand(time(NULL));
   init_udp_socket();
   pthread_t ptid[4];
   pthread_create(&ptid[0], NULL, &backup_an_thread, NULL);
@@ -1032,5 +1231,28 @@ int main(int argc, char *argv[]) {
     listen_request();
   }
   //rename_an_files(1,1);
+
+}
+
+//------------------------------------------------------------
+//MAIN PROGRAM TO RUN NFT SERVER
+//------------------------------------------------------------
+void* main_NFT_server(void *arg) {
+
+
+
+}
+
+//----------------------------------------------------------
+// main function
+//---------------------------------------------------------
+int main(int argc, char *argv[]) {
+  uint32_t packet_size;	
+
+  srand(time(NULL));
+  pthread_t ptid_main[2];
+  pthread_create(&ptid_main[0], NULL, &main_raida_server, NULL);
+  pthread_create(&ptid_main[1], NULL, &main_NFT_server, NULL);
+ 
   return 0;
 }

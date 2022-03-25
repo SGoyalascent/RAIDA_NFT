@@ -33,7 +33,7 @@
 #define COIN_CONFIG_BYTES 				5
 #define COIN_ID_INDEX		 				0
 #define COIN_CLOUD_INDEX		 			1
-#define COIN_TABLES_CNT					2
+#define COIN_TABLES_CNT					1     // NFT COIN_ID 1
 //-------------------------------------------
 #define RAIDA_LEGACY_IP_MAX 				4
 #define RAIDA_LEGACY_PORT_MAX 				2
@@ -44,12 +44,12 @@
 #define COIN_KEY_FILE_ROWS				28
 #define COIN_KEY_FILE_SIZE					COIN_KEY_FILE_ROWS * COIN_KEY_AN_SIZE
 
-
 #define DENO_TYPE_ALL					0	//( has 1,5,25,100,250)
 #define DENO_TYPE_SINGLE					1	//( has 1)
 
 #include "udp_socket.h"
 #include "sky_wallet.h"
+#include "NFT.h"
 #include <dirent.h> 
 //This is used for inter RAIDA Communication 
 struct my_id_coins {
@@ -105,6 +105,7 @@ struct date {
 struct coin_id {
 	unsigned char **AN;
 	unsigned char *MFS;
+	unsigned char **GUID;
 	struct master_ticket **TICKETS;
 	unsigned int AN_CNT;
 	unsigned char *free_id_days;

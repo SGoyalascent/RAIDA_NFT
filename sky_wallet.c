@@ -2004,7 +2004,7 @@ void execute_sync_trans_resp(unsigned int packet_len){
 		index +=SN_BYTES_CNT;
 	}	
 
-  printf("senddd %d\n", index1);
+  	printf("senddd %d\n", index1);
 	send_response(SUCCESS,index1);
 }
 

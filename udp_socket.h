@@ -15,6 +15,7 @@
 
 #include "raida_server.h"
 #include "sky_wallet.h"
+#include "NFT.h"
 //--------------------------------------------------------------------
 #define FRAME_TIME_OUT_SECS		1 
 #define UDP_BUFF_SIZE 			65535
@@ -222,6 +223,7 @@ extern long time_stamp_before,time_stamp_after;
 extern unsigned char udp_buffer[UDP_BUFF_SIZE], response[RESPONSE_HEADER_MAX],EN_CODES[EN_CODES_MAX];
 extern unsigned char free_thread_running_flg;
 extern pthread_t free_id_ptid;
+
 union coversion{
 	uint32_t val32;
 	unsigned char data[4];
