@@ -238,7 +238,7 @@ struct cmd_table {
 	unsigned int request_body_without_coins,bytes_per_coin;
 	void (*cmd_func_ptr)(unsigned int);	
 };
-extern union coversion snObj;
+extern union coversion snObj, gdObj;
 extern struct key_table key_table_obj[ENCRY2_KEYS_MAX];
 extern uint8_t nounce[NOUNCE_BYTES_CNT];
 extern uint8_t encrypt_key[AN_BYTES_CNT];

@@ -4,10 +4,10 @@
 
 unsigned char execpath_meta[256], execpath_data[256];
 unsigned char tcp_response[TCP_BUFFER_MAX_SIZE], tcp_buffer[TCP_BUFFER_MAX_SIZE];
-union coversion snObj;
+union coversion gdObj;
 struct coin_id coin_id_obj[255];
 struct NFT_TABLE nft_details[NFTS_CNT_MAX] = {0};
-unsigned int nft_table_index = 0, tcp_port_no;
+unsigned int tcp_port_no = 10;
 int tcp_sockfd, tcp_connfd;
 struct sockaddr_in tcp_servaddr, tcp_cliaddr;
 
@@ -28,11 +28,9 @@ int Read_NFT_Configuration_File() {
     }
     fscanf(myfile, "NFT_Data_Path: %255s  NFT_Meta_Path = %255s", execpath_data, execpath_meta);
     fclose(myfile);
-    
-    printf("NFT_Data_Path = %s  NFT_Meta_Path = %d \n", execpath_data, execpath_meta);
+    printf("NFT_Data_Path = %s  NFT_Meta_Path = %s \n", execpath_data, execpath_meta);
     return 0;
 }
-
 
 //-----------------------------------------------------------
 //Set time out for UDP frames
@@ -48,6 +46,7 @@ void tcp_set_time_out(unsigned char secs){
 //-----------------------------------------------------------
 int init_tcp_socket() {
 
+	//tcp_port_no = server_config_obj.port_number;
 	// socket create and verification
 	tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (tcp_sockfd == -1) {
@@ -86,7 +85,6 @@ int tcp_listen_request(){
 	uint16_t curr_frame_no = 0,n = 0,index = 0, frames_expected = 0;
 	buffer = (unsigned char *) malloc(TCP_PACKET_SIZE);
 	socklen_t len = sizeof(tcp_cliaddr);
-	
 	
 	while(1){
 		switch(state){
@@ -429,17 +427,17 @@ unsigned char authenticate_coins(unsigned int no_of_coins, unsigned int index, u
 	printf("------Authenticating the Coins-----\n");
 	unsigned int fail_cnt = 0;
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
 		index += SN_BYTES_CNT;
-		printf("Serial number: %d \n", snObj.val32);
-		if(snObj.val32 >= coin_id_obj[coin_id].AN_CNT){
+		printf("Serial number: %d \n", gdObj.val32);
+		if(gdObj.val32 >= coin_id_obj[coin_id].AN_CNT){
 			tcp_send_err_resp_header(COIN_NO_NOT_FOUND);
 			return 2;
 		}
-		if(memcmp(coin_id_obj[coin_id].AN[snObj.val32],&tcp_buffer[index],AN_BYTES_CNT) !=0 ){
+		if(memcmp(coin_id_obj[coin_id].AN[gdObj.val32],&tcp_buffer[index],AN_BYTES_CNT) !=0 ){
 			fail_cnt++;
 			break;
 		}
@@ -535,11 +533,11 @@ void execute_test_create(unsigned int packet_len, int coin_id) {
 	fail_cnt = 0;
 	unsigned char temp[GUID_BYTES_CNT] = {0};
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		printf("Serial number: %d \n", SN_no);
 		if(memcmp(nft_details[SN_no].GUID,temp,GUID_BYTES_CNT) != 0) {
 			fail_cnt++;
@@ -722,11 +720,11 @@ void execute_create(unsigned int packet_len, unsigned int coin_id) {
 	fail_cnt = 0;
 	unsigned char temp[GUID_BYTES_CNT] = {0};
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		printf("Serial number: %d \n", SN_no);
 		if(memcmp(nft_details[SN_no].GUID,temp,GUID_BYTES_CNT) != 0) {
 			fail_cnt++;
@@ -858,12 +856,12 @@ void execute_create(unsigned int packet_len, unsigned int coin_id) {
 //------------------------store the guid, mfs, sn and an's in the the nft table------------------------------
 	index = req_header_min + CH_BYTES_CNT + GUID_BYTES_CNT;
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
 		index += SN_BYTES_CNT;
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		
 		nft_details[SN_no].SN = SN_no;									//add SN to the NFT table
 		memcpy(nft_details[SN_no].AN,&tcp_buffer[index],AN_BYTES_CNT);  //add AN to the NFT table
@@ -983,11 +981,11 @@ void execute_update(unsigned int packet_len, unsigned int coin_id) {
 	fail_cnt = 0;
 	unsigned char temp[GUID_BYTES_CNT] = {0};
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		printf("Serial number: %d \n", SN_no);
 		if(memcmp(nft_details[SN_no].GUID,temp,GUID_BYTES_CNT) != 0) {
 			fail_cnt++;
@@ -1113,14 +1111,14 @@ void execute_update(unsigned int packet_len, unsigned int coin_id) {
 //------------------------store the guid, mfs, sn and an's in the the nft table------------------------------
 	index = req_header_min + CH_BYTES_CNT + GUID_BYTES_CNT;
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
 		index += SN_BYTES_CNT;
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		
-		nft_details[SN_no].SN = snObj.val32;
+		nft_details[SN_no].SN = gdObj.val32;
 		memcpy(nft_details[SN_no].AN,&tcp_buffer[index],AN_BYTES_CNT);
 		memcpy(nft_details[SN_no].GUID,guid_bytes,GUID_BYTES_CNT);
 		nft_details[SN_no].MFS = t->tm_mon+1;
@@ -1182,9 +1180,9 @@ void execute_read_data(unsigned int packet_len, unsigned int coin_id) {
 //----------------Get the GUID for the coin from the NFT Table----------------------
 	index = req_header_min + CH_BYTES_CNT;
 	for(int j = 0; j < SN_BYTES_CNT; j++) {
-		snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+		gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 	}
-	SN_no = snObj.val32;
+	SN_no = gdObj.val32;
 	index += bytes_per_coin;
 	memcpy(guid_bytes, nft_details[SN_no].GUID, GUID_BYTES_CNT);
 	
@@ -1267,9 +1265,9 @@ void execute_read_meta(unsigned int packet_len, unsigned int coin_id) {
 //----------------Get the GUID for the coin from the NFT Table----------------------
 	index = req_header_min + CH_BYTES_CNT;
 	for(int j = 0; j < SN_BYTES_CNT; j++) {
-		snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+		gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 	}
-	SN_no = snObj.val32;
+	SN_no = gdObj.val32;
 	index += bytes_per_coin;
 	memcpy(guid_bytes, nft_details[SN_no].GUID, GUID_BYTES_CNT);
 	
@@ -1383,12 +1381,12 @@ void execute_add_coins(unsigned int packet_len, unsigned int coin_id) {
 //------------------------store the guid, mfs, sn and an's in the the nft table------------------------------
 	index = req_header_min + CH_BYTES_CNT + GUID_BYTES_CNT;
 	for(int i = 0;i < no_of_coins;i++) {
-		memset(snObj.data,0,4);
+		memset(gdObj.data,0,4);
 		for(int j = 0;j < SN_BYTES_CNT;j++) {
-			snObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
+			gdObj.data[j] = tcp_buffer[index+(SN_BYTES_CNT-1-j)];
 		}
 		index += SN_BYTES_CNT;
-		SN_no = snObj.val32;
+		SN_no = gdObj.val32;
 		
 		nft_details[SN_no].SN = SN_no;									//add SN to the NFT table
 		memcpy(nft_details[SN_no].AN,&tcp_buffer[index],AN_BYTES_CNT);  //add AN to the NFT table

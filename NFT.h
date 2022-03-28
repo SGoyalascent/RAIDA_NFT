@@ -15,6 +15,7 @@
 
 
 #include "raida_server.h"
+#include "udp_socket.h"
 #include "sky_wallet.h"
 //--------------------------------------------------------------------
 #define FRAME_TIME_OUT_SECS		1 
@@ -217,8 +218,8 @@
 #define NFTS_CNT_MAX									16777216 	// NO_OF_PAGES * RECORDS_PER_PAGE
 #define NFT_DATA_PLUS_META_PER_COIN_MAX_BYTES_SIZE		8192000		//in bytes(binary) (8MB)
 #define TCP_BUFFER_MAX_SIZE								204800000   //in bytes(binary) (200MB) 
-#define TCP_BUFF_PER_FRAME_SIZE							65535 		//in bytes(binary) (64 KB)
-#define TCP_FRAMES_MAX									102400		//per frame 2KB	
+#define TCP_BUFF_PER_FRAME_SIZE							 		//in bytes(binary) (64 KB)
+#define TCP_FRAMES_MAX									100000		//per frame 2KB	
 #define TCP_PACKET_SIZE									2048		//in bytes(2KB)								
 #define NO_OF_PAGES_MAX									16384
 #define RECORDS_PER_PAGE_MAX							1024
@@ -250,9 +251,9 @@ struct NFT_TABLE {
 	unsigned char MFS;
 	unsigned char GUID[GUID_BYTES_CNT];
 };
-
 extern struct NFT_TABLE nft_details[NFTS_CNT_MAX];
 
+unsigned char execpath_meta[256], execpath_data[256];
 
 int Read_NFT_Configuration_File();
 void tcp_set_time_out(unsigned char secs);

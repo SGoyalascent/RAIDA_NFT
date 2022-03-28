@@ -1,1 +1,13 @@
-gcc raida_server.c udp_socket.c sky_wallet.c NFT.c aes.c -o NFT
+gcc raida_server.c udp_socket.c sky_wallet.c NFT.c aes.c -o NFT -pedantic-errors -Wall -Weffc++ -Wextra -Wsign-conversion -Werror
+
+gcc -DVERSION=\"`date +'%s'`\" -o NFT raida_server.c udp_socket.c NFT.c sky_wallet.c library.c aes.c -lm -pthread
+
+
+
+
+
+
+
+
+
+gcc raida_server.c udp_socket.c sky_wallet.c NFT.c library.c aes.c -o NFT -lm -pthread

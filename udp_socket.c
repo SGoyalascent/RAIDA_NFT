@@ -1588,15 +1588,15 @@ void execute_version(){
   */
 
 	index = RES_HS+HS_BYTES_CNT;
-  unsigned char *p = VERSION;
-  for (int i = 0; i < sizeof(VERSION); i++) {
-    if (VERSION[i] == 0x0)
-      break;
-
+  	
+	  unsigned char *p = VERSION;
+  	for (int i = 0; i < sizeof(VERSION); i++) {
+    	if (VERSION[i] == 0x0) {
+      		break;
+		}
 	    response[index] = VERSION[i];
-      index++;
-  }
-
+      	index++;
+  	}  
 
 	send_response(SUCCESS,index);
 }

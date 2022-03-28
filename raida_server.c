@@ -829,7 +829,7 @@ void update_guid_pages(unsigned int coin_id){
       fseek(fp_inp,0,SEEK_SET);	
       for(j=start_index;j<end_index;j++){
         fwrite(nft_details[j].GUID,GUID_BYTES_CNT,1,fp_inp);
-        fwrite(nft_details[j].MFS,MFS_BYTES_CNT,1,fp_inp);
+        fwrite(&nft_details[j].MFS,MFS_BYTES_CNT,1,fp_inp);
       }
       coin_config_obj[coin_id].pages_changed[i]=0;
       fclose(fp_inp);
@@ -1190,35 +1190,24 @@ int rename_an_files(unsigned int index,unsigned int coin_id){
 //MAIN PROGRAM TO RUN RAIDA SERVER
 //------------------------------------------------------------
 
+void* main_NFT_server(void *arg) {
+
+  //srand(time(NULL));
+  init_tcp_socket();
+  pthread_t ptid;
+  pthread_create(&ptid, NULL, &backup_guid_thread, NULL);
+ 
+  while(1) {
+    tcp_listen_request();
+  }
+  //rename_an_files(1,1);
+
+}
+
+//------------------------------------------------------------
+//MAIN PROGRAM TO RUN NFT SERVER
+//------------------------------------------------------------
 void* main_raida_server(void *arg) {
-
-  uint32_t packet_size;	
-  int alloc_only = 1;
-  welcomeMsg();
-  getexepath();
-  create_dirs();
-  if(load_raida_no() || load_server_config()  || load_coin_config() || load_shards_config()  || load_dns_config() || load_raida_legacy_config() ||
-      load_encrypt_key() || load_coin_owner() || load_my_id_coins()) {
-    exit(0);
-  }
-
-/*
-  if (argc > 1) {
-    alloc_only = atoi(argv[1]);
-    printf("Alloc only %d", alloc_only);
-  }
- */
-
-  int index = 0;
-
-  if(configure_an(index, alloc_only)){
-    exit(0);
-  }
-
-  
-  if(load_an(index,coin_config_obj[index].coin_id)){
-    exit(0);
-  }
 
   //srand(time(NULL));
   init_udp_socket();
@@ -1234,21 +1223,40 @@ void* main_raida_server(void *arg) {
 
 }
 
-//------------------------------------------------------------
-//MAIN PROGRAM TO RUN NFT SERVER
-//------------------------------------------------------------
-void* main_NFT_server(void *arg) {
-
-
-
-}
-
 //----------------------------------------------------------
 // main function
 //---------------------------------------------------------
 int main(int argc, char *argv[]) {
   uint32_t packet_size;	
+  int alloc_only = 1;
+  welcomeMsg();
+  getexepath();
+  create_dirs();
 
+  if(load_raida_no() || load_server_config()  || load_coin_config() || load_shards_config()  || load_dns_config() || load_raida_legacy_config() ||
+      load_encrypt_key() || load_coin_owner() || load_my_id_coins() || Read_NFT_Configuration_File()) {
+    exit(0);
+  }
+
+  if (argc > 1) {
+    alloc_only = atoi(argv[1]);
+    printf("Alloc only %d", alloc_only);
+  }
+  
+  int index = 0;
+  if(configure_an(index, alloc_only)){
+    exit(0);
+  }
+  if(load_an(index,coin_config_obj[index].coin_id)){
+    exit(0);
+  }
+  if(configure_guid(index, alloc_only)){
+    exit(0);
+  }
+  if(load_guid(index,coin_config_obj[index].coin_id)){
+    exit(0);
+  }
+  
   srand(time(NULL));
   pthread_t ptid_main[2];
   pthread_create(&ptid_main[0], NULL, &main_raida_server, NULL);
