@@ -33,7 +33,7 @@
 #define COIN_CONFIG_BYTES 				5
 #define COIN_ID_INDEX		 				0
 #define COIN_CLOUD_INDEX		 			1
-#define COIN_TABLES_CNT					1     // NFT COIN_ID 1
+#define COIN_TABLES_CNT					2     // NFT COIN_ID 1
 //-------------------------------------------
 #define RAIDA_LEGACY_IP_MAX 				4
 #define RAIDA_LEGACY_PORT_MAX 				2

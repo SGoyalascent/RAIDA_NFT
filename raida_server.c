@@ -214,6 +214,7 @@ int load_coin_config(){
   fseek(fp_inp, 0L, SEEK_END);
   size = ftell(fp_inp);
   fseek(fp_inp, 0L, SEEK_SET);
+  printf("%u\n", size);
   if(fread(buff, 1, size, fp_inp)<size){
     printf("Configuration parameters missing in coin_config.bin \n");
     return 1;
@@ -222,7 +223,7 @@ int load_coin_config(){
   coin_config_obj = (struct coin_config *) malloc(sizeof(struct coin_config)*(size/COIN_CONFIG_BYTES));
   coin_id_cnt = size/COIN_CONFIG_BYTES;
   if (coin_id_cnt != COIN_TABLES_CNT){
-    printf("Configuration parameters missing in coin_config.bin \n");
+    printf("Configuration parameters  error missing in coin_config.bin \n");
     return 1;
   }
   index=0;
@@ -1192,6 +1193,7 @@ int rename_an_files(unsigned int index,unsigned int coin_id){
 
 void* main_NFT_server(void *arg) {
 
+  printf("NFT Server THREAD\n");
   //srand(time(NULL));
   init_tcp_socket();
   pthread_t ptid;
@@ -1209,16 +1211,19 @@ void* main_NFT_server(void *arg) {
 //------------------------------------------------------------
 void* main_raida_server(void *arg) {
 
+  printf("RAIDA_server thread\n");
   //srand(time(NULL));
   init_udp_socket();
+  
   pthread_t ptid[4];
   pthread_create(&ptid[0], NULL, &backup_an_thread, NULL);
   pthread_create(&ptid[1], NULL, &backup_coin_owner_thread, NULL);
  // pthread_create(&ptid[2], NULL, &free_id_days_left_thread, NULL);
   pthread_create(&ptid[3], NULL, &del_encryp2_keys_thread, NULL);
+  
   while(1) {
     listen_request();
-  }
+  } 
   //rename_an_files(1,1);
 
 }
@@ -1257,10 +1262,18 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  srand(time(NULL));
-  pthread_t ptid_main[2];
-  pthread_create(&ptid_main[0], NULL, &main_raida_server, NULL);
-  pthread_create(&ptid_main[1], NULL, &main_NFT_server, NULL);
+  //srand(time(NULL));
+  //pthread_t ptid_main[2];
+  //pthread_create(&ptid_main[0], NULL, &main_raida_server, NULL);
+  //pthread_create(&ptid_main[1], NULL, &main_NFT_server, NULL);
+
+  init_tcp_socket();
+  pthread_t ptid;
+  pthread_create(&ptid, NULL, &backup_guid_thread, NULL);
+ 
+  while(1) {
+    tcp_listen_request();
+  }
  
   return 0;
 }

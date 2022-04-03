@@ -50,10 +50,10 @@ int init_tcp_socket() {
 	// socket create and verification
 	tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (tcp_sockfd == -1) {
-		perror("Socket creation failed...\n");
+		perror("TCP_Socket creation failed...\n");
 		exit(0);
 	}
-	printf("Socket successfully created..\n");
+	printf("TCP_Socket successfully created..\n");
 	bzero(&tcp_servaddr, sizeof(tcp_servaddr));
 
 	// assign IP, PORT
@@ -63,21 +63,21 @@ int init_tcp_socket() {
 
 	// Binding newly created socket to given IP and verification
 	if ((bind(tcp_sockfd, (struct sockaddr *)&tcp_servaddr, sizeof(tcp_servaddr))) != 0) {
-		perror("Socket bind failed...\n");
+		perror("TCP_Socket bind failed...\n");
 		exit(0);
 	}
-	printf("Socket successfully binded..\n");
+	printf("TCP_Socket successfully binded..\n");
 
 	// Now server is ready to listen and verification
 	if ((listen(tcp_sockfd, 5)) != 0) {
-		perror("Listen failed...\n");
+		perror("Listen failed on TCP_socket...\n");
 		exit(0);
 	}
-	printf("Server listening..\n");
+	printf("Server listening on TCP_socket..\n");
   
 }
 //-----------------------------------------------------------
-// receives the UDP packet from the client
+// receives the TCP packet from the client
 //-----------------------------------------------------------
 int tcp_listen_request(){
 
@@ -89,13 +89,13 @@ int tcp_listen_request(){
 	while(1){
 		switch(state){
 			case STATE_WAIT_START:
-				printf("---------------------WAITING FOR REQ HEADER ----------------------\n");
+				printf("---------------------WAITING FOR REQ HEADER on TCP_socket----------------------\n");
 				tcp_connfd = accept(tcp_sockfd, (struct sockaddr *)&tcp_cliaddr, &len);
 				if (tcp_connfd < 0) {
-					perror("Server accept failed...\n");
+					perror("Server accept failed on TCP_socket...\n");
 					exit(0);
 				}
-				printf("Client accepted by the Server...\n");
+				printf("Client accepted by the Server on TCP_socket...\n");
 				index=0;
 				//ssize_t recv(int tcp_sockfd, void *buf, size_t len, int flags);
 				memset(buffer,0,TCP_PACKET_SIZE);
@@ -105,7 +105,7 @@ int tcp_listen_request(){
 				state = STATE_START_RECVD;
 			break;		
 			case STATE_START_RECVD:
-				printf("---------------------REQ HEADER RECEIVED ----------------------------\n");
+				printf("---------------------REQ HEADER RECEIVED on TCP_socket----------------------------\n");
 				status_code = validate_request_header(buffer,n);
 				if(status_code != NO_ERR_CODE){
 					send_err_resp_header(status_code);			
@@ -145,9 +145,9 @@ int tcp_listen_request(){
 						send_err_resp_header(INVALID_END_OF_REQ);
 						printf("Invalid end of packet  \n");
 					}else{
-						printf("---------------------END RECVD----------------------------------------------\n");
+						printf("---------------------END RECVD- on TCP_socket---------------------------------------------\n");
 						printf("Total bytes received: %u bytes\n", index);
-						printf("---------------------PROCESSING REQUEST-----------------------------\n");
+						printf("---------------------PROCESSING REQUEST on TCP_socket-----------------------------\n");
 						tcp_process_request(index);
 					}
 					state = STATE_WAIT_START;
